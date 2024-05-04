@@ -18,9 +18,9 @@ class Nodo {
 public:
     Persona* datos;
     Nodo* siguiente;
-    Nodo* anterior; //nodo para lista circular doble
+    Nodo* anterior; //agregamos un puntero al nodo anterior
 
-    //constructores
+    //constructor
     Nodo() : datos(NULL), siguiente(NULL), anterior(NULL) {}
     Nodo(Persona* datos) : datos(datos), siguiente(NULL), anterior(NULL) {}
 };
@@ -35,7 +35,7 @@ public:
     //constructor
     Lista() : inicio(NULL), contador(0), iterador(NULL) {}
 
-    //todas las funciones principales
+    //funciones principales
     void agregar(Persona* datos);
     bool buscar(string criterio, string valor, string& resultado);
     bool eliminar(int registro);
@@ -56,16 +56,19 @@ public:
 
 void Lista::agregar(Persona* datos) {
     Nodo* nuevo = new Nodo(datos);
-    if (inicio == nullptr) {
+    if (inicio == NULL) {
         inicio = nuevo;
         inicio->siguiente = inicio; //el siguiente del primer nodo apunta a sí mismo
         inicio->anterior = inicio; //el anterior del primer nodo apunta a sí mismo
     }
     else {
-        Nodo* ultimo = inicio->anterior; //obtener el ultimo nodo
+        Nodo* temp = inicio;
+        while (temp->siguiente != inicio) {
+            temp = temp->siguiente;
+        }
+        temp->siguiente = nuevo;
+        nuevo->anterior = temp; //el anterior del nuevo nodo apunta al último nodo
         nuevo->siguiente = inicio; //el siguiente del nuevo nodo apunta al primer nodo
-        nuevo->anterior = ultimo; //el anterior del nuevo nodo apunta al último nodo actual
-        ultimo->siguiente = nuevo; //el siguiente del ultimo nodo actual apunta al nuevo nodo
         inicio->anterior = nuevo; //el anterior del primer nodo apunta al nuevo nodo
     }
     contador++;
@@ -73,7 +76,7 @@ void Lista::agregar(Persona* datos) {
 
 bool Lista::buscar(string criterio, string valor, string& resultado) {
     Nodo* temp = inicio;
-    while (temp != NULL) {
+    do {
         if (criterio == "nombre" && temp->datos->nombre == valor) {
             resultado = "Nombre: " + temp->datos->nombre + "\nApellido: " + temp->datos->apellido + "\nRegistro: " + to_string(temp->datos->registro) + "\nEdad: " + to_string(temp->datos->edad) + "\n";
             return true;
@@ -83,35 +86,36 @@ bool Lista::buscar(string criterio, string valor, string& resultado) {
             return true;
         }
         temp = temp->siguiente;
-    }
+    } while (temp != inicio);
     resultado = "No hay un nodo con ese registro\n";
     return false;
 }
 
 bool Lista::eliminar(int registro) {
-    if (inicio == nullptr)
+    if (inicio == NULL)
         return false;
 
-    Nodo* actual = inicio;
+    Nodo* temp = inicio;
     do {
-        if (actual->datos->registro == registro) {
-            Nodo* anterior = actual->anterior;
-            Nodo* siguiente = actual->siguiente;
-            anterior->siguiente = siguiente;
-            siguiente->anterior = anterior;
-            delete actual->datos;
-            delete actual;
+        if (temp->datos->registro == registro) {
+            if (temp == inicio) {
+                inicio = temp->siguiente;
+            }
+            temp->anterior->siguiente = temp->siguiente;
+            temp->siguiente->anterior = temp->anterior;
+            delete temp->datos;
+            delete temp;
             contador--;
             return true;
         }
-        actual = actual->siguiente;
-    } while (actual != inicio); //Recorrer hasta que se regrese al inicio
+        temp = temp->siguiente;
+    } while (temp != inicio); //recorrer hasta que se regrese al inicio
     return false;
 }
 
 bool Lista::modificar(int registro, Persona* nuevosDatos) {
     Nodo* temp = inicio;
-    while (temp != NULL) {
+    do {
         if (temp->datos->registro == registro) {
             temp->datos->nombre = nuevosDatos->nombre;
             temp->datos->apellido = nuevosDatos->apellido;
@@ -119,7 +123,7 @@ bool Lista::modificar(int registro, Persona* nuevosDatos) {
             return true;
         }
         temp = temp->siguiente;
-    }
+    } while (temp != inicio);
     return false;
 }
 
@@ -128,17 +132,8 @@ int Lista::contar() {
 }
 
 void Lista::iterador_first() {
-    //mueve el iterador al primer nodo de la lista
+    //Mueve el iterador al primer nodo de la lista
     iterador = inicio;
-}
-
-void Lista::iterador_next() {
-    if (iterador != NULL && iterador->siguiente != inicio) {
-        iterador = iterador->siguiente;
-    }
-    else {
-        cout << "El iterador ya está en el último nodo." << endl;
-    }
 }
 
 void Lista::iterador_prev() {
@@ -147,8 +142,17 @@ void Lista::iterador_prev() {
     }
 }
 
+void Lista::iterador_next() {
+    if (iterador != NULL) {
+        iterador = iterador->siguiente;
+    }
+    else {
+        cout << "El iterador no está apuntando a ningún nodo." << endl;
+    }
+}
+
 Nodo* Lista::iterador_getItem() {
-    //obtiene el nodo que apunta el iterador
+    //Obtiene el nodo que apunta el iterador
     return iterador;
 }
 
@@ -156,13 +160,15 @@ int main() {
     Lista lista;
     char opcion;
 
-    lista.agregar(new Persona("juan", "lopez", 22100190, 21));
-    lista.agregar(new Persona("pedro", "lopez", 22100191, 21));
-    lista.agregar(new Persona("valentino", "lopez", 22100192, 21));
+    lista.agregar(new Persona("juan", "lopez", 22100191, 21));
+    lista.agregar(new Persona("pedro", "lopez", 22100192, 21));
+    lista.agregar(new Persona("valentino", "lopez", 22100193, 21));
+    lista.agregar(new Persona("pedro", "lopez", 22100194, 21));
+    lista.agregar(new Persona("valentino", "lopez", 22100195, 21));
 
-    //menu
+    //Menu
     while (true) {
-        cout << endl << "Lista circular brad" << endl << endl;
+        cout << endl << "Lista circular doble" << endl << endl;
         cout << "a. Agregar nodo" << endl;
         cout << "b. Buscar" << endl;
         cout << "c. Eliminacion" << endl;
@@ -236,19 +242,21 @@ int main() {
         if (opcion == 'f') {
             Nodo* temp = lista.getInicio();
 
-            if (temp == nullptr) {
+            if (temp == NULL) {
                 cout << "Lista vacía" << endl;
             }
             else {
                 Nodo* actual = temp;
                 do {
-                    cout << "Nombre: " << actual->datos->nombre << endl;
-                    cout << "Apellido: " << actual->datos->apellido << endl;
-                    cout << "Registro: " << actual->datos->registro << endl;
-                    cout << "Edad: " << actual->datos->edad << endl;
-                    cout << "Direccion del nodo: " << actual << endl;
-                    cout << "Direccion del nodo siguiente: " << actual->siguiente << endl;
-                    cout << "Direccion del nodo anterior: " << actual->anterior << endl << endl;
+                    if (actual != NULL) {
+                        cout << "Nombre: " << actual->datos->nombre << endl;
+                        cout << "Apellido: " << actual->datos->apellido << endl;
+                        cout << "Registro: " << actual->datos->registro << endl;
+                        cout << "Edad: " << actual->datos->edad << endl;
+                        cout << "Direccion del nodo: " << actual << endl;
+                        cout << "Direccion del nodo siguiente: " << actual->siguiente << endl;
+                        cout << "Direccion del nodo anterior: " << actual->anterior << endl << endl;
+                    }
                     actual = actual->siguiente;
                 } while (actual != temp);
             }
@@ -307,4 +315,5 @@ int main() {
             } while (opcionIterador != 'g');
         }
     }
+    return 0;
 }
